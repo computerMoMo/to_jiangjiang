@@ -1,0 +1,9 @@
+{
+  "word_max_len":20,
+  "pinyin_max_len":15,
+  "input_file": "/home/momo/PycharmProjects/to_jiangjiang/data/test/test.txt",
+  "word_to_id": "word_to_id_dicts",
+  "pinyin_to_id": "pinyin_to_id_dicts",
+  "check_point_dir": "/home/momo/PycharmProjects/to_jiangjiang/data/model_ckpt",
+  "output_dir":"/home/momo/PycharmProjects/to_jiangjiang/data/test"
+}

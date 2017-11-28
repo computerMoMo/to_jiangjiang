@@ -1,0 +1,9 @@
+{
+  "word_max_len":20,
+  "pinyin_max_len":15,
+  "split":0.2,
+  "embedding_file":"char_vectors.txt",
+  "word_embedding_dim":100,
+  "pinyin_embedding_dim":20,
+  "corpus_id": "jiangjiang"
+}
