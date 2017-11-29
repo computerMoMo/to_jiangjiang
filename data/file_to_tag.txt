@@ -1,2 +1,0 @@
-spam.text	0
-ham.text	1
