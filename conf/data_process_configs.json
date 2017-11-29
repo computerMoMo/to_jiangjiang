@@ -2,8 +2,11 @@
   "word_max_len":20,
   "pinyin_max_len":15,
   "split":0.2,
-  "embedding_file":"char_vectors.txt",
+  "cut_word":false,
+  "word_embedding_file": "char_vectors.txt",
+  "pinyin_embedding_file": "None",
   "word_embedding_dim":100,
   "pinyin_embedding_dim":20,
-  "corpus_id": "jiangjiang"
+  "corpus_id": "jiangjiang",
+  "serialization_dir":"serialization_data_char"
 }

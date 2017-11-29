@@ -4,6 +4,8 @@
   "input_file": "/home/momo/PycharmProjects/to_jiangjiang/data/test/test.txt",
   "word_to_id": "word_to_id_dicts",
   "pinyin_to_id": "pinyin_to_id_dicts",
-  "check_point_dir": "/home/momo/PycharmProjects/to_jiangjiang/data/model_ckpt",
-  "output_dir":"/home/momo/PycharmProjects/to_jiangjiang/data/test"
+  "check_point_dir": "/home/momo/PycharmProjects/to_jiangjiang/data/model_ckpt/char_model",
+  "output_dir":"/home/momo/PycharmProjects/to_jiangjiang/data/test",
+  "cut_word":false,
+  "serialization_dir":"serialization_data_char"
 }

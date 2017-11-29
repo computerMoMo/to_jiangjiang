@@ -14,10 +14,12 @@
     "pinyin_filter_sizes": "2 3 4",
     "pinyin_num_filters": 150,
     "l2_reg_lambda": 0.001,
-    "use_pinyin": true
+    "use_pinyin": true,
+    "serialization_dir": "serialization_data_char"
   },
   "train_configs":
   {
+    "serialization_dir":"serialization_data_char",
     "x_train_data":"x_train_data",
     "y_train_data":"y_train_data",
     "x_valid_data":"x_valid_data",
@@ -26,7 +28,7 @@
     "evaluate_every":5,
     "checkpoint_every":5,
     "init_scale":0.05,
-    "check_point_path":"model_ckpt",
+    "check_point_path":"model_ckpt/char_model",
     "max_epoch":10,
     "optimizer_conf":{
 		"optimizer":"Adam",
