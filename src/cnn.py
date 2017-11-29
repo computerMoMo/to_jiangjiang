@@ -25,16 +25,17 @@ class MyCNN(object):
         self.pinyin_num_filters = configs["pinyin_num_filters"]
         self.l2_reg_lambda = configs["l2_reg_lambda"]
         self.use_pinyin = configs["use_pinyin"]
+        serialization_data_dir = os.path.join(DataDirPath, configs["serialization_dir"])
         if configs["word_embedding"] != "None":
-            self.word_init_embeddings = pickle.load(open(os.path.join(DataDirPath, configs["word_embedding"]), 'rb'))
+            self.word_init_embeddings = pickle.load(open(os.path.join(serialization_data_dir, configs["word_embedding"]), 'rb'))
         else:
             self.word_init_embeddings = None
-        self.word_vocab = pickle.load(open(os.path.join(DataDirPath, configs["word_to_id_dict"]), 'rb'))
+        self.word_vocab = pickle.load(open(os.path.join(serialization_data_dir, configs["word_to_id_dict"]), 'rb'))
         if configs["pinyin_embedding"] != "None":
-            self.pinyin_init_embeddings = pickle.load(open(os.path.join(DataDirPath, configs["pinyin_embedding"]), 'rb'))
+            self.pinyin_init_embeddings = pickle.load(open(os.path.join(serialization_data_dir, configs["pinyin_embedding"]), 'rb'))
         else:
             self.pinyin_init_embeddings = None
-        self.pinyin_vocab = pickle.load(open(os.path.join(DataDirPath, configs["pinyin_to_id_dict"]), 'rb'))
+        self.pinyin_vocab = pickle.load(open(os.path.join(serialization_data_dir, configs["pinyin_to_id_dict"]), 'rb'))
 
         # create graph
         # input

@@ -5,6 +5,7 @@ import os
 import codecs
 import json
 import pickle
+import jieba
 
 ConfDirPath = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "conf")
 DataDirPath = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "data")
@@ -16,7 +17,10 @@ def get_data_ids(configs):
     data_lists = []
     for line in test_reader.readlines():
         line_list = line.strip().split("\t")
-        text_item = [ch for ch in line_list[0]]
+        if configs["cut_word"]:
+            text_item = jieba.lcut(line_list[0])
+        else:
+            text_item = [ch for ch in line_list[0]]
         pinyin_item = line_list[1].split(" ")
         data_lists.append((text_item, pinyin_item))
 
@@ -54,8 +58,9 @@ def get_data_ids(configs):
 
 if __name__ == "__main__":
     configs = json.load(open(os.path.join(ConfDirPath, "interface.json")))
-    word_to_id_dict = pickle.load(open(os.path.join(DataDirPath, configs["word_to_id"]), 'rb'))
-    pinyin_to_id_dict = pickle.load(open(os.path.join(DataDirPath, configs["pinyin_to_id"]), 'rb'))
+    serialization_dir = os.path.join(DataDirPath, configs["serialization_dir"])
+    word_to_id_dict = pickle.load(open(os.path.join(serialization_dir, configs["word_to_id"]), 'rb'))
+    pinyin_to_id_dict = pickle.load(open(os.path.join(serialization_dir, configs["pinyin_to_id"]), 'rb'))
     # get data id
     data_id_lists = get_data_ids(configs)
     print("data nums in test file:", len(data_id_lists))

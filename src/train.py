@@ -52,10 +52,11 @@ if __name__ == "__main__":
     cnn_configs = configs["CNN_configs"]
     train_configs = configs["train_configs"]
     # load data
-    x_train_data = np.asarray(pickle.load(open(os.path.join(DataDirPath, train_configs["x_train_data"]), 'rb')), dtype=np.int32)
-    y_train_data = np.asarray(pickle.load(open(os.path.join(DataDirPath, train_configs["y_train_data"]), 'rb')), dtype=np.float32)
-    x_valid_data = np.asarray(pickle.load(open(os.path.join(DataDirPath, train_configs["x_valid_data"]), 'rb')), dtype=np.int32)
-    y_valid_data = np.asarray(pickle.load(open(os.path.join(DataDirPath, train_configs["y_valid_data"]), 'rb')), dtype=np.float32)
+    data_serialization_dir = os.path.join(DataDirPath, train_configs["serialization_dir"])
+    x_train_data = np.asarray(pickle.load(open(os.path.join(data_serialization_dir, train_configs["x_train_data"]), 'rb')), dtype=np.int32)
+    y_train_data = np.asarray(pickle.load(open(os.path.join(data_serialization_dir, train_configs["y_train_data"]), 'rb')), dtype=np.float32)
+    x_valid_data = np.asarray(pickle.load(open(os.path.join(data_serialization_dir, train_configs["x_valid_data"]), 'rb')), dtype=np.int32)
+    y_valid_data = np.asarray(pickle.load(open(os.path.join(data_serialization_dir, train_configs["y_valid_data"]), 'rb')), dtype=np.float32)
     xArray, yArray = iterator(x_train_data, y_train_data, train_configs["batch_size"])
     # train
     with tf.Graph().as_default(), tf.Session() as session:
@@ -71,12 +72,17 @@ if __name__ == "__main__":
 
             # CheckPoint State
             check_point_dir = os.path.join(DataDirPath, train_configs["check_point_path"])
-            ckpt = tf.train.get_checkpoint_state(check_point_dir)
-            if ckpt:
-                print("Loading model parameters from %s" % ckpt.model_checkpoint_path)
-                TextCNN.saver.restore(session, tf.train.latest_checkpoint(check_point_dir))
+            if not os.path.exists(check_point_dir):
+                os.mkdir(check_point_dir)
             else:
-                print("Created model with fresh parameters.")
+                for _file in os.listdir(check_point_dir):
+                    os.remove(os.path.join(check_point_dir, _file))
+            # ckpt = tf.train.get_checkpoint_state(check_point_dir)
+            # if ckpt:
+            #     print("Loading model parameters from %s" % ckpt.model_checkpoint_path)
+            #     TextCNN.saver.restore(session, tf.train.latest_checkpoint(check_point_dir))
+            # else:
+            print("Created model with fresh parameters.")
             session.run(tf.global_variables_initializer())
 
             # run train op

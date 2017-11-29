@@ -5,6 +5,7 @@ import os
 import random
 import numpy as np
 import pickle
+import jieba
 
 ConfDirPath = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "conf")
 DataDirPath = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "data")
@@ -21,9 +22,9 @@ def _save_vocab(dict, path):
     outfile.close()
 
 
-def load_vector_file(configs):
+def load_vector_file(vector_file_path):
     vector_dicts = dict()
-    with codecs.open(os.path.join(DataDirPath, configs["embedding_file"]), mode='r', encoding='utf-8') as f:
+    with codecs.open(vector_file_path, mode='r', encoding='utf-8') as f:
         for line in f.readlines():
             line = line.strip().split(" ")
             vector_dicts[line[0]] = np.asarray(list(map(float, line[1:])), dtype=np.float32)
@@ -49,7 +50,10 @@ def load_data(configs):
             pinyin_reader = codecs.open(pinyin_file, mode='r', encoding='utf-8')
             nums = 0
             for text_line, pinyin_line in zip(text_reader.readlines(), pinyin_reader.readlines()):
-                item = ([ch for ch in text_line.strip()], pinyin_line.strip().split(" "), tag)
+                if configs["cut_word"]:
+                    item = (jieba.lcut(text_line.strip()), pinyin_line.strip().split(" "), tag)
+                else:
+                    item = ([ch for ch in text_line.strip()], pinyin_line.strip().split(" "), tag)
                 Data_lists.append(item)
                 nums += 1
             print(file_name+" tag:", tag, " data nums:", nums)
@@ -61,27 +65,50 @@ def load_data(configs):
 
 
 def data_vectorization(configs, data_lists):
-    ex_vector_dicts = load_vector_file(configs)
+    if configs["word_embedding_file"] != "None":
+        pre_train_word_vector_dicts = load_vector_file(os.path.join(DataDirPath, configs["word_embedding_file"]))
+    else:
+        pre_train_word_vector_dicts = None
+    if configs["pinyin_embedding_file"] != "None":
+        pre_train_pinyin_vector_dicts = load_vector_file(os.path.join(DataDirPath, configs["pinyin_embedding_file"]))
+    else:
+        pre_train_pinyin_vector_dicts = None
     word_vector_dim = int(configs["word_embedding_dim"])
     pinyin_vector_dim = int(configs["pinyin_embedding_dim"])
 
     word_vectors = dict()
     pinyin_vectors = dict()
     exist_word_nums = 0
+    exist_pinyin_nums = 0
     for (text_list, pinyin_list, _) in data_lists:
+        # word vectors
         for word in text_list:
-            if word not in word_vectors:
-                if word in ex_vector_dicts:
-                    word_vectors[word] = ex_vector_dicts[word]
-                    exist_word_nums += 1
-                else:
+            if pre_train_word_vector_dicts:
+                if word not in word_vectors:
+                    if word in pre_train_word_vector_dicts:
+                        word_vectors[word] = pre_train_word_vector_dicts[word]
+                        exist_word_nums += 1
+                    else:
+                        word_vectors[word] = np.random.uniform(low=-0.5, high=0.5, size=word_vector_dim)
+            else:
+                if word not in word_vectors:
                     word_vectors[word] = np.random.uniform(low=-0.5, high=0.5, size=word_vector_dim)
+        # pinyin vectors
         for pinyin in pinyin_list:
-            if pinyin not in pinyin_vectors:
-                pinyin_vectors[pinyin] = np.random.uniform(low=-0.5, high=0.5, size=pinyin_vector_dim)
+            if pre_train_pinyin_vector_dicts:
+                if pinyin not in pinyin_vectors:
+                    if pinyin in pre_train_pinyin_vector_dicts:
+                        pinyin_vectors[pinyin] = pre_train_pinyin_vector_dicts[pinyin]
+                        exist_pinyin_nums += 1
+                    else:
+                        pinyin_vectors[pinyin] = np.random.uniform(low=-0.5, high=0.5, size=pinyin_vector_dim)
+            else:
+                if pinyin not in pinyin_vectors:
+                    pinyin_vectors[pinyin] = np.random.uniform(low=-0.5, high=0.5, size=pinyin_vector_dim)
     word_vectors[UNKNOWN] = np.random.uniform(low=-0.5, high=0.5, size=word_vector_dim)
     pinyin_vectors[UNKNOWN] = np.random.uniform(low=-0.5, high=0.5, size=pinyin_vector_dim)
     print(exist_word_nums, "/", len(word_vectors), " words find in pre trained word vectors")
+    print(exist_pinyin_nums, "/", len(pinyin_vectors), " pinyin find in pre trained pinyin vectors")
     print("word vectors dict size:", len(word_vectors))
     print("pinyin vectors dict size:", len(pinyin_vectors))
 
@@ -144,18 +171,21 @@ def generate_train_valid_data(configs, data_lists, word_to_id_dicts, pinyin_to_i
 if __name__ == "__main__":
     # 解析配置json
     configs = json.load(open(os.path.join(ConfDirPath, "data_process_configs.json")))
+    data_serialization_dir = os.path.join(DataDirPath, configs["serialization_dir"])
+    if not os.path.exists(data_serialization_dir):
+        os.mkdir(data_serialization_dir)
     # 读取数据集
     data_lists, file_to_tag_dict = load_data(configs)
-    _save_vocab(file_to_tag_dict, os.path.join(DataDirPath, "file_to_tag.txt"))
+    _save_vocab(file_to_tag_dict, os.path.join(data_serialization_dir, "file_to_tag.txt"))
     # 数据向量化
     word_vector_values, pinyin_vector_values, word_to_id_dicts, pinyin_to_id_dicts = data_vectorization(configs, data_lists)
-    pickle.dump(np.asarray(word_vector_values, dtype=np.float32), open(os.path.join(DataDirPath, "word_vectors"), "wb"))
-    pickle.dump(np.asarray(pinyin_vector_values, dtype=np.float32), open(os.path.join(DataDirPath, "pinyin_vectors"), "wb"))
-    pickle.dump(word_to_id_dicts, open(os.path.join(DataDirPath, "word_to_id_dicts"), "wb"))
-    pickle.dump(pinyin_to_id_dicts, open(os.path.join(DataDirPath, "pinyin_to_id_dicts"), "wb"))
+    pickle.dump(np.asarray(word_vector_values, dtype=np.float32), open(os.path.join(data_serialization_dir, "word_vectors"), "wb"))
+    pickle.dump(np.asarray(pinyin_vector_values, dtype=np.float32), open(os.path.join(data_serialization_dir, "pinyin_vectors"), "wb"))
+    pickle.dump(word_to_id_dicts, open(os.path.join(data_serialization_dir, "word_to_id_dicts"), "wb"))
+    pickle.dump(pinyin_to_id_dicts, open(os.path.join(data_serialization_dir, "pinyin_to_id_dicts"), "wb"))
     # 生成train和valid data
     x_train_data, y_train_data, x_valid_data, y_valid_data = generate_train_valid_data(configs, data_lists, word_to_id_dicts, pinyin_to_id_dicts, len(file_to_tag_dict))
-    pickle.dump(x_train_data, open(os.path.join(DataDirPath, "x_train_data"), "wb"))
-    pickle.dump(y_train_data, open(os.path.join(DataDirPath, "y_train_data"), "wb"))
-    pickle.dump(x_valid_data, open(os.path.join(DataDirPath, "x_valid_data"), "wb"))
-    pickle.dump(y_valid_data, open(os.path.join(DataDirPath, "y_valid_data"), "wb"))
+    pickle.dump(x_train_data, open(os.path.join(data_serialization_dir, "x_train_data"), "wb"))
+    pickle.dump(y_train_data, open(os.path.join(data_serialization_dir, "y_train_data"), "wb"))
+    pickle.dump(x_valid_data, open(os.path.join(data_serialization_dir, "x_valid_data"), "wb"))
+    pickle.dump(y_valid_data, open(os.path.join(data_serialization_dir, "y_valid_data"), "wb"))
