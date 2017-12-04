@@ -119,7 +119,7 @@ def data_vectorization(configs, data_lists):
     for idx, word in zip(range(0, len(word_vectors)), word_vectors.keys()):
         word_to_id_dicts[word] = idx
         word_vector_values.append(word_vectors[word])
-    for idx, pinyin in zip(range(0, len(word_vectors)), pinyin_vectors.keys()):
+    for idx, pinyin in zip(range(0, len(pinyin_vectors)), pinyin_vectors.keys()):
         pinyin_to_id_dicts[pinyin] = idx
         pinyin_vector_values.append(pinyin_vectors[pinyin])
     return word_vector_values, pinyin_vector_values, word_to_id_dicts, pinyin_to_id_dicts
